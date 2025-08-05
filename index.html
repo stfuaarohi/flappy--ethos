@@ -1,490 +1,256 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flappy EthOS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        /* General styling for the body */
         body {
-            font-family: 'Press Start 2P', cursive;
+            background-image: url('1080x360.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #1a1a2e; /* Deep purple/blue background */
-            color: #e0e0e0;
-            flex-direction: column;
-            text-align: center;
-            overflow: hidden; /* Prevent scrolling */
-        }
-        
-        /* Container for the game and UI elements */
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
             position: relative;
         }
-
-        /* Styling for the game canvas */
-        canvas {
-            /* Crypto-themed background with hex pattern */
-            background-color: #23234d;
-            background-image: radial-gradient(circle, #3a3a60 1px, transparent 1px);
-            background-size: 20px 20px;
-            border: 5px solid #2a2a4a;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
-            cursor: pointer;
-            width: 90vw; /* Responsive width */
-            max-width: 400px; /* Maximum width for larger screens */
-            height: 90vh; /* Responsive height */
-            max-height: 600px; /* Maximum height */
+        #game-container {
+            position: relative;
         }
-        
-        /* Styling for the score display */
-        .score {
-            position: absolute;
-            top: 20px;
-            font-size: 2em;
-            text-shadow: 2px 2px 4px #000;
-            color: #76f1e3; /* Cyan color */
+        #gameCanvas {
+            background-color: rgba(25, 25, 55, 0.9); /* Semi-transparent dark overlay */
+            border: 2px solid #333;
+            position: relative;
         }
-
-        /* Styling for the message/start screen */
-        .game-message {
+        #startMessage {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.5em;
-            text-shadow: 2px 2px 4px #000;
-            z-index: 10;
+            font-size: 24px;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            z-index: 100;
         }
-
-        /* Styling for the game over message */
-        .game-message.game-over {
-            font-size: 2em;
-            color: #e74c3c; /* Red color for game over */
-            animation: pulse 1.5s infinite;
-        }
-
-        /* Timed message for airdrop */
-        .airdrop-message {
+        #gameOverMessage {
             position: absolute;
-            top: 25%;
+            top: 40%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #f1c40f;
-            font-size: 1.2em;
-            text-shadow: 1px 1px 2px #000;
-            animation: fadeinout 5s linear forwards;
-            z-index: 9;
+            font-size: 22px; /* Adjusted font size */
+            color: white; /* Changed color to white */
+            text-align: center;
+            line-height: 1.5;
+            display: none;
+            z-index: 100;
+            width: 80%; /* To prevent text from being too wide */
         }
-        
-        /* Countdown timer */
-        .airdrop-countdown {
+        #score {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 1.2em;
-            color: #e74c3c;
-            text-shadow: 1px 1px 2px #000;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: #fff; /* Score color changed to white for visibility */
+            z-index: 100;
         }
-
-        @keyframes fadeinout {
-            0%, 100% { opacity: 0; }
-            10%, 90% { opacity: 1; }
-        }
-
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
-            100% { transform: translate(-50%, -50%) scale(1); }
-        }
-
-        /* Styling for the play again button */
-        .play-again-button {
-            background-color: #76f1e3; /* Cyan button color */
-            color: #1a1a2e;
-            border: none;
-            padding: 15px 30px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1em;
-            border-radius: 8px;
+        #shareButton {
+            position: absolute;
+            top: 65%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 100;
+            padding: 10px 20px;
+            font-size: 16px;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            margin-top: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .play-again-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-        }
-        
-        .share-button {
-            background-color: #3498db; /* Twitter blue */
+            background-color: #1DA1F2; /* X (Twitter) blue */
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1em;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            margin-top: 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
         }
-
-        .share-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-        }
-
     </style>
 </head>
 <body>
-
-<div class="game-container">
-    <canvas id="gameCanvas"></canvas>
-    <div id="score" class="score">Blocks: 0</div>
-    <div id="airdropCountdown" class="airdrop-countdown">AIRDROP IN: 10</div>
-    <div id="airdropMessage" class="airdrop-message" style="display: none;"></div>
-    <div id="gameMessage" class="game-message">
-        Click to Start Mining
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="startMessage">Click or Press Space to Start Mining</div>
+        <div id="gameOverMessage"></div>
+        <div id="score">Blocks: 0</div>
+        <button id="shareButton">Share on X</button>
     </div>
-    <button id="playAgainButton" class="play-again-button" style="display: none;">Play Again</button>
-    <button id="shareButton" class="share-button" style="display: none;">Share Score on X</button>
-</div>
 
-<script>
-    window.onload = function() {
-        // Get the canvas and its 2D rendering context
+    <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('score');
-        const airdropCountdown = document.getElementById('airdropCountdown');
-        const airdropMessage = document.getElementById('airdropMessage');
-        const gameMessage = document.getElementById('gameMessage');
-        const playAgainButton = document.getElementById('playAgainButton');
-        const shareButton = document.getElementById('shareButton');
 
-        // Game variables
-        let gameRunning = false;
-        let score = 0;
-        
-        // Load the custom bird image
         const birdImage = new Image();
         birdImage.src = 'generated-image.jpg';
-        let isImageLoaded = false;
-        birdImage.onload = () => {
-            isImageLoaded = true;
-            draw();
-        };
 
-        // Bird properties
         const bird = {
             x: 50,
-            y: 0,
-            width: 30,
-            height: 30,
+            y: 150,
+            width: 34,
+            height: 24,
+            gravity: 0.6,
             velocity: 0,
-            jumpStrength: -5,
-            color: '#f1c40f' // Fallback color if image fails
+            jump: -10,
         };
-        
-        // Initial difficulty settings
-        let gravity = 0.1;
-        let pipeSpeed = 1.5;
-        let pipeGap = 200;
 
-        // Pipe properties (now candlesticks)
         const pipes = [];
+        const pipeGap = 150;
         const pipeWidth = 50;
-        let pipeSpawnInterval = 150; // frames
-        let frames = 0;
+        let frame = 0;
+        let score = 0;
+        let gameRunning = false;
 
-        // Airdrop specific components
-        let airdropCountdownValue = 10;
-        let airdropMessageFrames = 0;
-        let codeItem = null;
+        const gameOverMessages = [
+            "Transaction failed. This game is harder than getting a code. Can you help a player out? @ethereum_OS",
+            "This game is harder than getting an airdrop! Paper hands everywhere. Maybe @ethereum_OS has a code for a dedicated miner?",
+            "You were almost there! Just like that airdrop code. The struggle is real. @ethereum_OS, can you help a fellow miner?",
+            "Your wallet has been rugged! Just kidding. But seriously, this game is tough. I'm hoping my dedication gets noticed by @ethereum_OS."
+        ];
 
-        // Function to draw a single pipe (candlestick)
-        function drawPipe(x, y, height, color) {
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, pipeWidth, height);
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x, y, pipeWidth, height);
-        }
-        
-        // Function to draw all pipes
-        function drawPipes() {
-            for (const pipe of pipes) {
-                // Determine candlestick color randomly
-                const color = pipe.color === 'red' ? '#e74c3c' : '#2ecc71';
-                drawPipe(pipe.x, 0, pipe.top, color);
-                drawPipe(pipe.x, pipe.bottom, canvas.height - pipe.bottom, color);
-            }
-        }
-        
-        // Function to draw the bird
         function drawBird() {
-            if (isImageLoaded) {
-                // If the image is loaded, draw it
-                ctx.drawImage(birdImage, bird.x, bird.y, bird.width, bird.height);
-            } else {
-                // Otherwise, draw a fallback colored square
-                ctx.fillStyle = bird.color;
-                ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
-            }
+            ctx.drawImage(birdImage, bird.x, bird.y, bird.width, bird.height);
         }
-        
-        // Function to draw the special 'CODE' item
-        function drawCodeItem() {
-            if (codeItem) {
-                ctx.fillStyle = '#f1c40f'; // Gold color
+
+        function drawPipes() {
+            pipes.forEach(pipe => {
+                const color = pipe.isGreen ? '#28a745' : '#dc3545';
+                
+                // Top pipe
+                ctx.fillStyle = color;
+                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight);
+                ctx.fillRect(pipe.x, pipe.topHeight + pipeGap, pipeWidth, canvas.height - (pipe.topHeight + pipeGap));
+
+                // Drawing candlestick lines
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.arc(codeItem.x + codeItem.size / 2, codeItem.y + codeItem.size / 2, codeItem.size / 2, 0, 2 * Math.PI);
-                ctx.fill();
-                ctx.fillStyle = '#1a1a2e';
-                ctx.textAlign = 'center';
-                ctx.font = '12px "Press Start 2P"';
-                ctx.fillText('CODE', codeItem.x + codeItem.size / 2, codeItem.y + codeItem.size / 2 + 4);
-                ctx.textAlign = 'left';
-            }
+                ctx.moveTo(pipe.x + pipeWidth / 2, 0);
+                ctx.lineTo(pipe.x + pipeWidth / 2, pipe.topHeight);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(pipe.x + pipeWidth / 2, pipe.topHeight + pipeGap);
+                ctx.lineTo(pipe.x + pipeWidth / 2, canvas.height);
+                ctx.stroke();
+            });
         }
 
-        // Function to reset the game to its initial state
-        function resetGame() {
-            gameRunning = false;
-            score = 0;
-            scoreDisplay.textContent = 'Blocks: 0';
-            bird.y = canvas.height / 2;
-            bird.velocity = 0;
-            pipes.length = 0;
-            frames = 0;
-            airdropCountdownValue = 10;
-            airdropMessageFrames = 0;
-            codeItem = null;
-            
-            // Reset difficulty to initial values
-            gravity = 0.1;
-            pipeSpeed = 1.5;
-            pipeGap = 200;
-
-            gameMessage.textContent = 'Click to Start Mining';
-            gameMessage.style.display = 'block';
-            gameMessage.classList.remove('game-over');
-            playAgainButton.style.display = 'none';
-            shareButton.style.display = 'none';
-            draw();
-        }
-
-        // Function to update the game state
         function update() {
             if (!gameRunning) return;
-            
-            // Gradually increase difficulty over time
-            gravity = Math.min(0.2, 0.1 + frames / 15000); // Max gravity of 0.2
-            pipeSpeed = Math.min(2.5, 1.5 + frames / 10000); // Max speed of 2.5
-            pipeGap = Math.max(120, 200 - frames / 500); // Min gap of 120
 
-            // Apply gravity to the bird
-            bird.velocity += gravity;
+            // Update bird
+            bird.velocity += bird.gravity;
             bird.y += bird.velocity;
 
-            // Update pipes
-            for (let i = pipes.length - 1; i >= 0; i--) {
-                const pipe = pipes[i];
-                pipe.x -= pipeSpeed;
-
-                // Check for collision
-                if (
-                    bird.x < pipe.x + pipeWidth &&
-                    bird.x + bird.width > pipe.x &&
-                    (bird.y < pipe.top || bird.y + bird.height > pipe.bottom)
-                ) {
-                    gameOver();
-                    return;
-                }
-
-                // Check if bird has passed the pipe
-                if (pipe.x + pipeWidth < bird.x && !pipe.scored) {
-                    score++;
-                    scoreDisplay.textContent = 'Blocks: ' + score;
-                    pipe.scored = true;
-                }
-
-                // Remove pipes that are off-screen
-                if (pipe.x + pipeWidth < 0) {
-                    pipes.splice(i, 1);
-                }
-            }
-            
-            // Update and check for 'CODE' item
-            if (codeItem) {
-                codeItem.x -= pipeSpeed;
-                // Collision with bird
-                if (
-                    bird.x < codeItem.x + codeItem.size &&
-                    bird.x + bird.width > codeItem.x &&
-                    bird.y < codeItem.y + codeItem.size &&
-                    bird.y + bird.height > codeItem.y
-                ) {
-                    // Show a celebratory message and remove the item
-                    airdropMessage.textContent = 'CODE ACQUIRED!';
-                    airdropMessage.style.display = 'block';
-                    airdropMessageFrames = 150; // Display for 2.5 seconds
-                    codeItem = null;
-                }
-                if (codeItem.x < -codeItem.size) {
-                    codeItem = null; // Remove if off-screen
-                }
+            // Check for collision with top/bottom
+            if (bird.y + bird.height > canvas.height || bird.y < 0) {
+                endGame();
             }
 
-            // Spawn new pipes
-            if (frames % pipeSpawnInterval === 0) {
-                const topPipeHeight = Math.random() * (canvas.height - pipeGap - 50) + 25;
-                const bottomPipeY = topPipeHeight + pipeGap;
-                const pipeColor = Math.random() > 0.5 ? 'green' : 'red'; // Randomly choose color
+            // Generate new pipes
+            if (frame % 150 === 0) {
+                const topHeight = Math.random() * (canvas.height - pipeGap - 50) + 20;
+                const isGreen = Math.random() > 0.5;
                 pipes.push({
                     x: canvas.width,
-                    top: topPipeHeight,
-                    bottom: bottomPipeY,
-                    color: pipeColor,
-                    scored: false
+                    topHeight: topHeight,
+                    isGreen: isGreen,
+                    passed: false
                 });
             }
-            
-            // Airdrop Countdown Logic
-            if (frames % 60 === 0 && airdropCountdownValue > 0) {
-                airdropCountdownValue--;
-                airdropCountdown.textContent = 'AIRDROP IN: ' + airdropCountdownValue;
-            }
-            if (airdropCountdownValue === 0) {
-                airdropCountdown.textContent = 'AIRDROP OVER';
-            }
 
-            // Airdrop message for team
-            if (frames % 360 === 0 && airdropMessageFrames <= 0) { // Every 6 seconds
-                const messages = [
-                    'Minting blocks for the airdrop!',
-                    'Playing for that airdrop code!',
-                    'My crypto skills are on point!'
-                ];
-                airdropMessage.textContent = messages[Math.floor(Math.random() * messages.length)];
-                airdropMessage.style.display = 'block';
-                airdropMessageFrames = 150; // Display for 2.5 seconds
-            }
+            // Update pipes
+            pipes.forEach(pipe => {
+                pipe.x -= 2;
 
-            // Hide the airdrop message after its duration
-            if (airdropMessageFrames > 0) {
-                airdropMessageFrames--;
-                if (airdropMessageFrames <= 0) {
-                    airdropMessage.style.display = 'none';
+                // Check for collision with pipes
+                if (
+                    bird.x + bird.width > pipe.x &&
+                    bird.x < pipe.x + pipeWidth &&
+                    (bird.y < pipe.topHeight || bird.y + bird.height > pipe.topHeight + pipeGap)
+                ) {
+                    endGame();
                 }
-            }
 
+                // Check for score
+                if (!pipe.passed && bird.x > pipe.x + pipeWidth) {
+                    score++;
+                    pipe.passed = true;
+                    document.getElementById('score').innerText = 'Blocks: ' + score;
+                }
+            });
 
-            // Check for collision with ground or sky
-            if (bird.y + bird.height > canvas.height || bird.y < 0) {
-                gameOver();
-            }
+            // Remove off-screen pipes
+            pipes.filter(pipe => pipe.x + pipeWidth > 0);
 
-            frames++;
-        }
-
-        // Main drawing function
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+            // Clear canvas and redraw
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawPipes();
             drawBird();
-            drawCodeItem();
+
+            frame++;
+            requestAnimationFrame(update);
         }
 
-        // Main game loop
-        function animate() {
-            if (gameRunning) {
-                update();
-            }
-            draw();
-            requestAnimationFrame(animate);
-        }
-
-        // Function to handle bird jumping
         function jump() {
-            if (!gameRunning) return;
-            bird.velocity = bird.jumpStrength;
+            bird.velocity = bird.jump;
         }
 
-        // Function to start the game
         function startGame() {
-            if (gameRunning) return;
             gameRunning = true;
-            gameMessage.style.display = 'none';
-            airdropCountdown.style.display = 'block';
+            bird.y = 150;
+            bird.velocity = 0;
+            pipes.length = 0;
+            score = 0;
+            frame = 0;
+            document.getElementById('score').innerText = 'Blocks: 0';
+            document.getElementById('startMessage').style.display = 'none';
+            document.getElementById('gameOverMessage').style.display = 'none';
+            document.getElementById('shareButton').style.display = 'none';
+            update();
         }
 
-        // Function to end the game with a random crypto message
-        function gameOver() {
+        function endGame() {
             gameRunning = false;
-            airdropCountdown.style.display = 'none';
-            const messages = [
-                `You\'re rugged! I thought I could mint more blocks, but I guess I can't. My only hope for an airdrop is you, @EthOS_team!`,
-                'Gas fees were too high, and now I\'m out of luck. My blocks are gone, but my wallet is ready for a code! @EthOS_team',
-                `Paper hands! I failed the test. Please reward my effort with a code instead? @EthOS_team`,
-                `Transaction failed. This game is harder than getting a code. Can you help a player out? @EthOS_team`
-            ];
-            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-            gameMessage.textContent = randomMessage;
-            gameMessage.style.display = 'block';
-            gameMessage.classList.add('game-over');
-            playAgainButton.style.display = 'block';
-            shareButton.style.display = 'block';
+            const message = gameOverMessages[Math.floor(Math.random() * gameOverMessages.length)];
+            document.getElementById('gameOverMessage').innerText = message;
+            document.getElementById('gameOverMessage').style.display = 'block';
+            document.getElementById('startMessage').innerText = 'Click or Press Space to Restart Mining';
+            document.getElementById('startMessage').style.display = 'block';
+            document.getElementById('shareButton').style.display = 'block';
         }
-        
-        // Function to share the score on X
-        function shareScore() {
-            const tweetText = `I just minted ${score} blocks in my new game, Flappy EthOS! Can I get an airdrop code from the team? #EthOS #Ethereum @EthOS_team`;
+
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space' && gameRunning) {
+                jump();
+            } else if (e.code === 'Space' && !gameRunning) {
+                startGame();
+            }
+        });
+
+        canvas.addEventListener('click', () => {
+            if (gameRunning) {
+                jump();
+            } else {
+                startGame();
+            }
+        });
+
+        document.getElementById('shareButton').addEventListener('click', () => {
+            const tweetText = `I scored ${score} blocks on Flappy EthOS! This game was made by @stfuaarohi. It's so hard, I'm hoping @ethereum_OS will notice my dedication and send a code! #EthOS #Airdrop`;
             const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
             window.open(tweetUrl, '_blank');
-        }
-
-        // Event listeners for user input
-        canvas.addEventListener('click', () => {
-            startGame();
-            jump();
         });
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                startGame();
-                jump();
-            }
-        });
-        playAgainButton.addEventListener('click', resetGame);
-        shareButton.addEventListener('click', shareScore);
-        
-        // Handle window resize to make the canvas responsive
-        function resizeCanvas() {
-            canvas.width = window.innerWidth > 400 ? 400 : window.innerWidth * 0.9;
-            canvas.height = window.innerHeight > 600 ? 600 : window.innerHeight * 0.9;
-            resetGame();
-        }
 
-        window.addEventListener('resize', resizeCanvas);
-        
-        // Initial setup
-        resizeCanvas();
-        animate();
-    };
-</script>
-
+    </script>
 </body>
 </html>
